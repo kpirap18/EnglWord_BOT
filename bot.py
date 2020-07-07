@@ -1,7 +1,8 @@
 import telebot
 import config
+import config_init
 
-bot = telebot.TeleBot(config.TOKEN)
+bot = telebot.TeleBot(config_init.TOKEN)
 
 @bot.message_handler(commands=["help"])
 def help_messages(message):

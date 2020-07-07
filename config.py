@@ -1,4 +1,3 @@
-TOKEN = '1225876441:AAHzRWvPtXz84nGdiTL90V12912KWogfK2M'
 
 DEV_MESSAGE = "Разработчики данного бота" u'\U0001f338' \
               "\n\n" \
