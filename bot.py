@@ -1,9 +1,10 @@
 import telebot
 import config
 import config_init
-import mongo_models
+
 import datetime
 from random import randint, seed
+from mongo_models import User_stud, Question
 
 bot = telebot.TeleBot(config_init.TOKEN)
 
@@ -26,27 +27,27 @@ def help_messages(message):
 
 def generate_r2d2():
 
-    seed(datetime.now())
+    #seed(datetime.now())
     return f"R{randint(0, 100)}-D{randint(0, 100)}"
 
 @bot.message_handler(commands=["developers"])
 def developers_messages(message):
-    bot.send_message(message.chat.id,
-                     config.DEV_MESSAGE)
+    bot.send_message(message.chat.id, config.DEV_MESSAGE)
 
 @bot.message_handler(commands=["start"])
 def start_registration(message):
-    if not mongo_models.User_stud.objects(user_id=message.chat.id):
-        mongo_models.User_stud.login = message.chat.username
+    if not User_stud.objects(user_id=message.chat.id):
+        User_stud.login = message.chat.username
 
         if message.chat.username is None:
-            mongo_models.User_stud.login = f"[{generate_r2d2()}](tg://user&id={str(message.chat.id)})"
+            User_stud.login = f"[{generate_r2d2()}](tg://user&id={str(message.chat.id)})"
 
-        print(f"[{generate_r2d2()}](tg://user&id={str(message.chat.id)})")
+
 @bot.message_handler(content_types=["text"])
 def repeat_all_messages(message):
     bot.send_message(message.chat.id, message.text)
     print(message.chat.id, message.chat.username)
+    print(f"[{generate_r2d2()}](tg://user&id={str(message.chat.id)})")
 
 
 if __name__ == '__main__':
