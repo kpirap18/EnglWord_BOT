@@ -5,7 +5,7 @@ HELP_MESSAGE = "1 - Для начала работы нажмите ▶️ /star
                "2 - Если есть вопросы, пиши разработчикам" \
                u'\U0001f53d'
 HELP_BUTTON = u'\U0001f525' "Для связи с разработчиком"
-
+PORTION_QUE = 5
 '''DB_NAME = os.environ['DB_NAME']
 DB_USER = os.environ['DB_USER']
 DB_PASS = os.environ['DB_PASS']
