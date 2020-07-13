@@ -3,10 +3,13 @@ import config
 import config_init
 
 import datetime
+import mongoengine
 from random import randint, seed
 from mongo_models import User_stud, Question
 
 bot = telebot.TeleBot(config_init.TOKEN)
+mongoengine.connect('test')
+
 
 @bot.message_handler(commands=["help"])
 def help_messages(message):
