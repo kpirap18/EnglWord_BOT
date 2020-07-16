@@ -12,4 +12,4 @@ DB_USER = "ira"
 DB_PASS = "1234"
 DB_HOST = "localhost"
 
-READY_BTN = " Я готов! ✅ "
+READY_BTN = [" Я готов! ✅ ", "Не готов"]

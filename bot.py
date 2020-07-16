@@ -37,23 +37,52 @@ def message_send_readiness():
         Отправка всем вопрос о готовности
     """
     for stud in User_stud.objects():
-        stud = send_single_conf(stud, True)
-        stud.save()
+        if stud.user_status == "stop":
+            stud.user_status = "ready"
+            stud = send_single_conf(stud)
+            stud.save()
 
-def send_single_conf(stud, is_):
+def message_end(user, call):
+    bot.send_message(user.user_id, text="Тогда до завтра")
+
+def parse_questions(user, call):
+    bot.send_message(user.user_id, text="Приступим")
+
+
+def send_single_conf(stud):
     """
         Вопрос о готовности пользователя
     """
     mark_ = telebot.types.InlineKeyboardMarkup()
-    mark_.add(telebot.types.InlineKeyboardButton(text = config.READY_BTN,
-                                                 callback_data = config.READY_BTN ))
-
-    if is_:
-        message = "📚 Готовы ответить на пару вопросиков от меня?"
+    mark_.add(telebot.types.InlineKeyboardButton(text=config.READY_BTN[0],
+                                                 callback_data=config.READY_BTN[0]))
+    mark_.add(telebot.types.InlineKeyboardButton(text=config.READY_BTN[1],
+                                                 callback_data=config.READY_BTN[1]))
+    message = "Здравствуй! 😀 \n"\
+              "📚 Готовы ответить на пару вопросиков от меня"\
+              " и показать, что вы знаете английские слова лучше меня?"
 
     bot.send_message(stud.user_id, message, reply_markup=mark_)
 
     return stud
+
+@bot.callback_query_handler(lambda call: call.data in config.READY_BTN)
+def call_question(call):
+    """
+        Вопрсы после нажатии кнопки
+    """
+    bot.answer_callback_query(call.id, "")
+
+    user = User_stud.objects(user_id=call.message.chat.id).first()
+
+    if user.user_status == "ready":
+
+        if call.data == config.READY_BTN[0]:
+            parse_questions(user, call)
+
+        if call.data == config.READY_BTN[1]:
+            message_end(user, call)
+
 
 @bot.message_handler(commands=["help"])
 def help_messages(message):
@@ -74,7 +103,7 @@ def help_messages(message):
 
     bot.send_message(message.chat.id,
                      config.HELP_MESSAGE,
-                     reply_markup= keyboard)
+                     reply_markup=keyboard)
 
 @bot.message_handler(commands=["developers"])
 def developers_messages(message):
@@ -100,7 +129,7 @@ def start_registration(message):
         bot.register_next_step_handler(msg, name_ask)
 
     else:
-        bot.send_message(message.chat.id, "Ты уже есть у меня в памяти!")
+        bot.send_message(message.chat.id, "А мы уже знакомы 😄")
 
 def name_ask(message):
     """
@@ -111,32 +140,28 @@ def name_ask(message):
         user_name = message.text
         stud = User_stud(
             user_id=message.chat.id,
-            user_name = user_name,
-            user_status = "stop"
+            user_name=user_name,
+            user_status="stop"
         )
         stud.save()
         bot.send_message(message.chat.id, "👋 Привет, " + user_name +
-                                          "! Мы с тобой начинаем"
+                                          "! Мы начинаем"
                                           " изучать слова, мой друг!")
     else:
-        mssg = bot.send_message(message.chat.id, "😔 Прости, я тебя не понимаю,"
-                                                 "попробуй еще раз")
-        bot.register_next_step_handler(mssg, name_ask)
+        msg = bot.send_message(message.chat.id, "😔 Прости, я тебя не понимаю,"
+                                                "попробуй еще раз")
+        bot.register_next_step_handler(msg, name_ask)
 
 def schedule__():
-    schedule.every().day.at("13:00").do(message_send_readiness)
+    schedule.every().day.at("14:32").do(message_send_readiness)
 
     while True:
         schedule.run_pending()
         time.sleep(1)
 
 
-def parse_questions():
-    pass
-
-
 if __name__ == "__main__":
-    multiprocessing.Process(target = schedule__, args = ()).start()
+    multiprocessing.Process(target=schedule__, args=()).start()
     bot.polling(none_stop=True, interval=0)
 
 '''@bot.message_handler(content_types=["text"])
