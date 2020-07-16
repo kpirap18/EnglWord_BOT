@@ -28,7 +28,7 @@ mongoengine.connect(
 
 
 def generate_r2d2():
-    seed(datetime.now())
+    #seed(datetime.now())
     return f"R{randint(0, 100)}-D{randint(0, 100)}"
 
 
@@ -47,11 +47,97 @@ def message_end(user, call):
     bot.send_message(user.user_id, text="Тогда до завтра! Хорошего дня! 🦄 \n" 
                                         "Буду ждать тебя 🙄")
     user.user_status = "stop"
+    user.save()
+
+def button_makeup(button):
+    """
+        Кнопки в столбики
+    """
+
+    markup = telebot.types.InlineKeyboardMarkup()
+
+    for text_btn, text2_btn in zip(button[::2], button[1::2]):
+        markup.add(
+            telebot.types.InlineKeyboardButton(text=text_btn, callback_data=text_btn),
+            telebot.types.InlineKeyboardButton(text=text2_btn, callback_data=text2_btn)
+        )
+
+    return markup
 
 
-def parse_questions(user, call):
-    bot.send_message(user.user_id, text="Приступим")
+def send_questions(user):
+    """
+        Функция отправки вопроса пользователю (слова и возможный перевод)
+    """
 
+    bot.send_message(user.user_id, text="Приступим!")
+    arr_number_questions = 1  # randint(0, config.COUNT_QUE)
+    question = Question.objects(number=arr_number_questions).first()
+    user.user_number_que = arr_number_questions
+
+    message = f"❓ {question.text}\n\n"
+    for button, ans in zip(config.BUTTON_ANS, question.answers):
+        message += f"🔸{button}. {ans}\n"
+
+    buttons = button_makeup(list(config.BUTTON_ANS.keys()))
+
+    bot.send_message(user.user_id,
+                     message,
+                     reply_markup=buttons
+                     )
+
+    user.user_status = "question"
+    user.save()
+    print(user.user_status)
+
+@bot.callback_query_handler(lambda call: call.data == config.READY_BTN[0])
+def query_handler_ready(call):
+    """
+        Высылание вопроса с кнопками тем,
+        кто подтвердил готовность отвечать на вопрос.
+    """
+
+    bot.answer_callback_query(call.id)
+    student = User_stud.objects(user_id=call.message.chat.id).first()
+
+    if student.user_status == "ready":
+        send_questions(student)
+
+@bot.callback_query_handler(lambda call: call.data in config.BUTTON_ANS)
+def query_handler_questions(call):
+    """
+        Обработка нажатия inline-кнопок с выбором ответа студентом.
+    """
+
+    bot.answer_callback_query(call.id)
+    user = User_stud.objects(user_id=call.message.chat.id).first()
+    num = user.user_number_que
+    question = Question.objects(number=num).first()
+
+    if user.user_status == "question":
+
+        user_answer = call.message.text.split("\n")[config.BUTTON_ANS[call.data]+1][4:]
+        correct_answer = question.correct_answer
+
+        print(user_answer)
+        print(correct_answer)
+
+        if user_answer == correct_answer:
+            bot.send_message(call.message.chat.id, "Правильно 😀, так держать! 🟢")
+        else:
+            bot.send_message(call.message.chat.id, "Эх 😔, к сожалению, неправильно 🔴")
+
+    if user.user_count_que == config.PORTION_QUE:
+        user.user_status = "stop"
+        user.user_count_que = 0
+        user.user_number_que = 0
+        user.save()
+        bot.send_message(call.message.chat.id, "Сейчас вопросов нет, спасибо," 
+                                               " что ответил!")
+    else:
+        user.user_count_que += 1
+        user.save()
+        send_questions(user)
 
 def send_single_conf(stud):
     """
@@ -79,9 +165,6 @@ def call_question(call):
     user = User_stud.objects(user_id=call.message.chat.id).first()
 
     if user.user_status == "ready":
-
-        if call.data == config.READY_BTN[0]:
-            parse_questions(user, call)
 
         if call.data == config.READY_BTN[1]:
             message_end(user, call)
@@ -152,7 +235,9 @@ def name_ask(message):
             user_id=message.chat.id,
             user_login=login,
             user_name=user_name,
-            user_status="stop"
+            user_status="stop",
+            user_count_que=0,
+            user_number_que=0
         )
         stud.save()
 
@@ -166,6 +251,15 @@ def name_ask(message):
                                                 "попробуй еще раз")
         bot.register_next_step_handler(msg, name_ask)
 
+@bot.message_handler(commands=["question"])
+def question_handler(message):
+    if User_stud.objects(user_id=message.chat.id):
+        stud = User_stud.objects(user_id=message.chat.id).first()
+        print(message.chat.id, stud)
+        stud.user_status = "ready"
+        stud.save()
+        send_single_conf(stud)
+
 
 @bot.message_handler(content_types=["text"])
 def repeat_all_messages(message):
@@ -175,7 +269,10 @@ def repeat_all_messages(message):
 
 
 def schedule__():
-    schedule.every().day.at("16:59").do(message_send_readiness)
+    schedule.every().day.at("13:00").do(message_send_readiness)
+    schedule.every().day.at("16:00").do(message_send_readiness)
+    schedule.every().day.at("20:00").do(message_send_readiness)
+    schedule.every().day.at("23:25").do(message_send_readiness)
 
     while True:
         schedule.run_pending()
