@@ -1,20 +1,13 @@
 import telebot
-import multiprocessing
-import schedule
-import config
-import time
-
-import logging
-
-import datetime
 import mongoengine
 
+import multiprocessing
+import schedule
+import time
+
+import config
 from dbinstances import User_stud, Question
-from random import randint, seed
-
-
-logger = telebot.logger
-telebot.logger.setLevel(logging.INFO)
+from random import randint
 
 bot = telebot.TeleBot(config.TOKEN)
 
@@ -28,13 +21,12 @@ mongoengine.connect(
 
 
 def generate_r2d2():
-    #seed(datetime.now())
     return f"R{randint(0, 100)}-D{randint(0, 100)}"
 
 
 def message_send_readiness():
     """
-        Отправка всем вопрос о готовности
+        Отправка ВСЕМ вопрос о готовности("Я готов", "Я не готов").
     """
     for stud in User_stud.objects():
         if stud.user_status == "stop":
@@ -43,15 +35,22 @@ def message_send_readiness():
             stud.save()
 
 
-def message_end(user, call):
+@bot.callback_query_handler(lambda call: call.data == config.READY_BTN[1])
+def message_end(user):
+    """
+        Если пользователь нажал "Я не готов",
+        то ему приходит сообщение с ожиданием до завтра.
+    """
+
     bot.send_message(user.user_id, text="Тогда до завтра! Хорошего дня! 🦄 \n" 
                                         "Буду ждать тебя 🙄")
     user.user_status = "stop"
     user.save()
 
+
 def button_makeup(button):
     """
-        Кнопки в столбики
+        Функция, чтобы кнопочти распологались в столбики.
     """
 
     markup = telebot.types.InlineKeyboardMarkup()
@@ -67,11 +66,11 @@ def button_makeup(button):
 
 def send_questions(user):
     """
-        Функция отправки вопроса пользователю (слова и возможный перевод)
+        Функция отправки вопроса пользователю (слова и возможный перевод).
     """
 
     bot.send_message(user.user_id, text="Приступим!")
-    arr_number_questions = 1  # randint(0, config.COUNT_QUE)
+    arr_number_questions = randint(0, config.COUNT_QUE)
     question = Question.objects(number=arr_number_questions).first()
     user.user_number_que = arr_number_questions
 
@@ -90,11 +89,12 @@ def send_questions(user):
     user.save()
     print(user.user_status)
 
+
 @bot.callback_query_handler(lambda call: call.data == config.READY_BTN[0])
-def query_handler_ready(call):
+def button_handler_ready(call):
     """
-        Высылание вопроса с кнопками тем,
-        кто подтвердил готовность отвечать на вопрос.
+        Если пользователь ннажал "Я готов",
+        то ему отправляются вопросы.
     """
 
     bot.answer_callback_query(call.id)
@@ -103,10 +103,11 @@ def query_handler_ready(call):
     if student.user_status == "ready":
         send_questions(student)
 
+
 @bot.callback_query_handler(lambda call: call.data in config.BUTTON_ANS)
-def query_handler_questions(call):
+def button_handler_questions(call):
     """
-        Обработка нажатия inline-кнопок с выбором ответа студентом.
+        Вывод ответа правильно или неправильно ответил пользователь.
     """
 
     bot.answer_callback_query(call.id)
@@ -139,9 +140,10 @@ def query_handler_questions(call):
         user.save()
         send_questions(user)
 
+
 def send_single_conf(stud):
     """
-        Вопрос о готовности пользователя
+        Вопрос о готовности пользователя (ОДНОГО).
     """
     mark_ = telebot.types.InlineKeyboardMarkup()
     mark_.add(telebot.types.InlineKeyboardButton(text=config.READY_BTN[0],
@@ -149,31 +151,16 @@ def send_single_conf(stud):
     mark_.add(telebot.types.InlineKeyboardButton(text=config.READY_BTN[1],
                                                  callback_data=config.READY_BTN[1]))
 
-    bot.send_message(stud.user_id, text="📄")
+    bot.send_message(stud.user_id, text="🥳🇬🇧")
     bot.send_message(stud.user_id, config.START_EVERYDAY_MSG, reply_markup=mark_)
 
     return stud
 
 
-@bot.callback_query_handler(lambda call: call.data in config.READY_BTN)
-def call_question(call):
-    """
-        Вопрсы после нажатии кнопки
-    """
-    bot.answer_callback_query(call.id, "")
-
-    user = User_stud.objects(user_id=call.message.chat.id).first()
-
-    if user.user_status == "ready":
-
-        if call.data == config.READY_BTN[1]:
-            message_end(user, call)
-
-
 @bot.message_handler(commands=["help"])
 def help_messages(message):
     """
-        Информация помощи
+        Информация о помощи.
     """
     keyboard = telebot.types.InlineKeyboardMarkup()
 
@@ -190,7 +177,7 @@ def help_messages(message):
 @bot.message_handler(commands=["info"])
 def developers_messages(message):
     """
-        Информация о разработчиках
+        Информация о боте и разработчиках.
     """
     keyboard = telebot.types.InlineKeyboardMarkup()
 
@@ -207,7 +194,7 @@ def developers_messages(message):
 @bot.message_handler(commands=["start"])
 def start_registration(message):
     """
-        Запись некоторых данных пользователя в бд
+        Запись некоторых данных пользователя в бд.
     """
 
     if not User_stud.objects(user_id=message.chat.id):
@@ -220,7 +207,7 @@ def start_registration(message):
 
 def name_ask(message):
     """
-        Запись имени
+        Запись данных в саму базу данных.
     """
     
     if type(message.text) == str:
@@ -251,8 +238,13 @@ def name_ask(message):
                                                 "попробуй еще раз")
         bot.register_next_step_handler(msg, name_ask)
 
+
 @bot.message_handler(commands=["question"])
 def question_handler(message):
+    """
+        Если слудент захочет ответить на вопросы просто так.
+    """
+
     if User_stud.objects(user_id=message.chat.id):
         stud = User_stud.objects(user_id=message.chat.id).first()
         print(message.chat.id, stud)
@@ -263,12 +255,19 @@ def question_handler(message):
 
 @bot.message_handler(content_types=["text"])
 def repeat_all_messages(message):
+    """
+        Если пользователь прислал просто текст.
+    """
+
     bot.send_message(message.chat.id, "😔 Я не научился еще понимать твои сообщения," 
                                       " поэтому напиши /info или /help " 
                                       "если не знаешь, что делать, я помогу 😉")
 
 
 def schedule__():
+    """
+        Время отправки сообщений про готовность.
+    """
     schedule.every().day.at("13:00").do(message_send_readiness)
     schedule.every().day.at("16:00").do(message_send_readiness)
     schedule.every().day.at("20:00").do(message_send_readiness)
