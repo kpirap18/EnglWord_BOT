@@ -2,6 +2,7 @@ import mongoengine
 
 class User_stud(mongoengine.Document):
     user_id = mongoengine.IntField(required=True)
+    user_login = mongoengine.StringField(required=True, max_length=30)
     user_name = mongoengine.StringField(required=True, max_length=50)
     user_status = mongoengine.StringField(max_length=20)
 
