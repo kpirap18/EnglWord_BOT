@@ -32,5 +32,6 @@ DB_NAME = "test"
 DB_USER = "ira"
 DB_PASS = "1234"
 DB_HOST = "localhost"
+DB_PART = 27017
 
 READY_BTN = [" Я готов! ✅ ", "Я не готов! ❌"]

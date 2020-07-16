@@ -16,7 +16,7 @@ mongoengine.connect(
     username=config.DB_USER,
     password=config.DB_PASS,
     host=config.DB_HOST,
-    port=27017
+    port=config.DB_PART
 )
 
 
@@ -68,15 +68,13 @@ def send_questions(user):
     """
         Функция отправки вопроса пользователю (слова и возможный перевод).
     """
-
-    bot.send_message(user.user_id, text="Приступим!")
     arr_number_questions = randint(0, config.COUNT_QUE)
     question = Question.objects(number=arr_number_questions).first()
     user.user_number_que = arr_number_questions
 
-    message = f"❓ {question.text}\n\n"
+    message = f" {question.text}\n\n"
     for button, ans in zip(config.BUTTON_ANS, question.answers):
-        message += f"🔸{button}. {ans}\n"
+        message += f"{button} {ans}\n"
 
     buttons = button_makeup(list(config.BUTTON_ANS.keys()))
 
