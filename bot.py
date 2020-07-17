@@ -50,7 +50,7 @@ def message_end(user):
 
 def button_makeup(button):
     """
-        Функция, чтобы кнопочти распологались в столбики.
+        Функция, чтобы кнопочки располагались в столбики.
     """
 
     markup = telebot.types.InlineKeyboardMarkup()
@@ -68,11 +68,10 @@ def send_questions(user):
     """
         Функция отправки вопроса пользователю (слова и возможный перевод).
     """
-    arr_number_questions = randint(0, config.COUNT_QUE)
+    arr_number_questions = user.user_number_que
     question = Question.objects(number=arr_number_questions).first()
-    user.user_number_que = arr_number_questions
 
-    message = f" {question.text}\n\n"
+    message = f" {question.text} ?\n\n"
     for button, ans in zip(config.BUTTON_ANS, question.answers):
         message += f"{button} {ans}\n"
 
@@ -110,8 +109,8 @@ def button_handler_questions(call):
 
     bot.answer_callback_query(call.id)
     user = User_stud.objects(user_id=call.message.chat.id).first()
-    num = user.user_number_que
-    question = Question.objects(number=num).first()
+    number = user.user_number_que
+    question = Question.objects(number=number).first()
 
     if user.user_status == "question":
 
@@ -129,12 +128,22 @@ def button_handler_questions(call):
     if user.user_count_que == config.PORTION_QUE:
         user.user_status = "stop"
         user.user_count_que = 0
-        user.user_number_que = 0
-        user.save()
+
+        if user.user_number_que >= config.COUNT_QUE:
+            user.user_number_que = 1
+        else:
+            user.user_number_que += 1
+
         bot.send_message(call.message.chat.id, "Сейчас вопросов нет, спасибо," 
                                                " что ответил!")
     else:
         user.user_count_que += 1
+
+        if user.user_number_que >= config.COUNT_QUE:
+            user.user_number_que = 1
+        else:
+            user.user_number_que += 1
+
         user.save()
         send_questions(user)
 
@@ -150,7 +159,8 @@ def send_single_conf(stud):
                                                  callback_data=config.READY_BTN[1]))
 
     bot.send_message(stud.user_id, text="🥳🇬🇧")
-    bot.send_message(stud.user_id, config.START_EVERYDAY_MSG, reply_markup=mark_)
+    message = "Здравствуй, " + stud.user_name + "!\n" + config.START_EVERYDAY_MSG
+    bot.send_message(stud.user_id, message, reply_markup=mark_)
 
     return stud
 
@@ -222,7 +232,7 @@ def name_ask(message):
             user_name=user_name,
             user_status="stop",
             user_count_que=0,
-            user_number_que=0
+            user_number_que=1
         )
         stud.save()
 
