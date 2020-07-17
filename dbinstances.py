@@ -8,6 +8,7 @@ class User_stud(mongoengine.Document):
     user_status = mongoengine.StringField(max_length=20)
     user_count_que = mongoengine.IntField(required=True)
     user_number_que = mongoengine.IntField(required=True)
+    user_wrong_answer = mongoengine.StringField()
 
 
 class Question(mongoengine.Document):
