@@ -68,8 +68,8 @@ def button_makeup(button, keys):
 
 def send_questions(user):
     """
-        Функция отправки вопроса пользователю
-        (слова и возможный перевод в кнопочках).
+        Функция отправки вопроса пользователю.
+        (слова и возможный перевод в кнопочках)
     """
     arr_number_questions = user.user_number_que
     question = Question.objects(number=arr_number_questions).first()
