@@ -284,16 +284,12 @@ def tips_handler(message):
 
             message += f"• **{question.text}** - {question.correct_answer} \n"
 
-        bot.send_message(user.user_id, message, parse_mode="markdown")
+        bot.send_message(user.user_id, text=message, parse_mode="markdown")
 
         user.user_wrong_answer = ""
         user.save()
     else:
-        bot.send_message(user.user_id, "🤔 У меня есть 2 предположения: \n\n" 
-                                       "• Либо ты сегодня молодец и все " 
-                                       "верно ответил. ☺\n" 
-                                       "• Либо ты сегодня не отвечал. 🙄\n\n" 
-                                       "Прости, я пока не умею это определять 😔")
+        bot.send_message(user.user_id, text=config.TIPS_MSG)
 
 
 @bot.message_handler(content_types=["text"])
