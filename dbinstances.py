@@ -1,6 +1,9 @@
+"""
+    Файл с описанием документов в базе данных
+"""
 import mongoengine
 
-
+# Класс, описываюший пользователя
 class User_stud(mongoengine.Document):
     user_id = mongoengine.IntField(required=True)
     user_login = mongoengine.StringField(required=True, max_length=500)
@@ -10,7 +13,7 @@ class User_stud(mongoengine.Document):
     user_number_que = mongoengine.IntField(required=True)
     user_wrong_answer = mongoengine.StringField()
 
-
+# Класс, описывающий данные вопроса
 class Question(mongoengine.Document):
     number = mongoengine.IntField(required=True)
     text = mongoengine.StringField(required=True, max_length=50)

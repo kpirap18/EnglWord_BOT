@@ -1,5 +1,4 @@
 .idea/
 venv
 __pycache__
-config_init.py
 words.json

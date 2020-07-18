@@ -9,6 +9,7 @@ import config
 from dbinstances import User_stud, Question
 from random import randint
 
+# Подключение БД MongoDB и бота
 bot = telebot.TeleBot(config.TOKEN)
 
 mongoengine.connect(
@@ -44,7 +45,10 @@ def message_end(user):
         то ему приходит сообщение с ожиданием до завтра.
     """
 
-    bot.send_message(user.user_id, text=config.NOT_READY_MSG)
+    bot.send_message(user.user_id,
+                     text=config.NOT_READY_MSG
+                     )
+
     user.user_status = "stop"
     user.save()
 
@@ -59,8 +63,10 @@ def button_makeup(button, keys):
     for text_btn, text2_btn, key, key2 in zip(button[::2], button[1::2],
                                               keys[::2], keys[1::2]):
         markup.add(
-            telebot.types.InlineKeyboardButton(text=text_btn, callback_data=key),
-            telebot.types.InlineKeyboardButton(text=text2_btn, callback_data=key2)
+            telebot.types.InlineKeyboardButton(text=text_btn,
+                                               callback_data=key),
+            telebot.types.InlineKeyboardButton(text=text2_btn,
+                                               callback_data=key2)
         )
 
     return markup
@@ -74,9 +80,10 @@ def send_questions(user):
     arr_number_questions = user.user_number_que
     question = Question.objects(number=arr_number_questions).first()
 
-    message = f" 🍭 Переведи, пожалуйста это слово: **_{question.text}_** ?\n\n"
+    message = f" 🍭 Переведи, пожалуйста это слово: ➡ _{question.text}_ ?\n\n"
 
-    buttons = button_makeup(list(question.answers), list(config.BUTTON_ANS.keys()))
+    buttons = button_makeup(list(question.answers),
+                            list(config.BUTTON_ANS.keys()))
 
     bot.send_message(user.user_id,
                      message,
@@ -115,6 +122,7 @@ def button_handler_questions(call):
     question = Question.objects(number=number).first()
 
     if user.user_status == "question":
+
         user_answer = question.answers[config.BUTTON_ANS[call.data] - 1]
         correct_answer = question.correct_answer
 
@@ -122,9 +130,14 @@ def button_handler_questions(call):
         print(correct_answer)
 
         if user_answer == correct_answer:
-            bot.send_message(call.message.chat.id, config.CORRECT_MSG)
+            bot.send_message(call.message.chat.id,
+                             text=config.CORRECT_MSG
+                             )
         else:
-            bot.send_message(call.message.chat.id, config.WRONG_MSG)
+            bot.send_message(call.message.chat.id,
+                             text=config.WRONG_MSG
+                             )
+
             user.user_wrong_answer += f"{number} "
             user.save()
 
@@ -137,7 +150,10 @@ def button_handler_questions(call):
         else:
             user.user_number_que += 1
 
-        bot.send_message(call.message.chat.id, config.END_MSG)
+        bot.send_message(call.message.chat.id,
+                         text=config.END_MSG
+                         )
+
         user.save()
     else:
         user.user_count_que += 1
@@ -161,9 +177,15 @@ def send_single_conf(stud):
     mark_.add(telebot.types.InlineKeyboardButton(text=config.READY_BTN[1],
                                                  callback_data=config.READY_BTN[1]))
 
-    bot.send_message(stud.user_id, text="🥳🇬🇧")
     message = "Здравствуй, " + stud.user_name + "!\n" + config.START_EVERYDAY_MSG
-    bot.send_message(stud.user_id, message, reply_markup=mark_)
+
+    bot.send_message(stud.user_id,
+                     text="🥳🇬🇧"
+                     )
+    bot.send_message(stud.user_id,
+                     text=message,
+                     reply_markup=mark_
+                     )
 
     return stud
 
@@ -181,8 +203,9 @@ def help_messages(message):
     keyboard.add(button1)
 
     bot.send_message(message.chat.id,
-                     config.HELP_MESSAGE,
-                     reply_markup=keyboard)
+                     text=config.HELP_MESSAGE,
+                     reply_markup=keyboard
+                     )
 
 
 @bot.message_handler(commands=["info"])
@@ -198,8 +221,9 @@ def developers_messages(message):
     keyboard.add(button1)
 
     bot.send_message(message.chat.id,
-                     config.INFO_MESSAGE,
-                     reply_markup=keyboard)
+                     text=config.INFO_MESSAGE,
+                     reply_markup=keyboard
+                     )
 
 
 @bot.message_handler(commands=["start"])
@@ -209,11 +233,16 @@ def start_registration(message):
     """
 
     if not User_stud.objects(user_id=message.chat.id):
-        msg = bot.send_message(message.chat.id, config.HELLO_MESSAGE)
+        msg = bot.send_message(message.chat.id,
+                               text=config.HELLO_MESSAGE
+                               )
+
         bot.register_next_step_handler(msg, name_ask)
 
     else:
-        bot.send_message(message.chat.id, "А мы уже знакомы 😄")
+        bot.send_message(message.chat.id,
+                         text="А мы уже знакомы 😄"
+                         )
 
 
 def name_ask(message):
@@ -240,14 +269,16 @@ def name_ask(message):
         )
         stud.save()
 
-        bot.send_message(message.chat.id, "👋 Привет, " + user_name +
-                                          "! Мы начинаем изучать слова," 
-                                          " мой друг!\n\n"
-                                          "Каждый день в 13:00 будут приходить вопросы" 
-                                          " так что будь готов! 📝")
+        bot.send_message(message.chat.id,
+                         text="👋 Привет, " + user_name +
+                         config.START_REG_MSG
+                         )
     else:
-        msg = bot.send_message(message.chat.id, "😔 Прости, я тебя не понимаю,"
-                                                "попробуй еще раз")
+        msg = bot.send_message(message.chat.id,
+                               text="😔 Прости, я тебя не понимаю,"
+                               "попробуй еще раз"
+                               )
+
         bot.register_next_step_handler(msg, name_ask)
 
 
@@ -274,7 +305,7 @@ def tips_handler(message):
 
     user = User_stud.objects(user_id=message.chat.id).first()
     wrong_ans = user.user_wrong_answer.split(" ")
-    print(len(wrong_ans), wrong_ans)
+
     if len(wrong_ans) - 1:
         message = " 📌 Повтори эти слова, чтобы в следующий" \
                   " раз правильно ответить: \n"
@@ -282,14 +313,20 @@ def tips_handler(message):
         for i in range(len(wrong_ans) - 1):
             question = Question.objects(number=wrong_ans[i]).first()
 
-            message += f"• **{question.text}** - {question.correct_answer} \n"
+            message += f"• *{question.text}* - {question.correct_answer} \n"
 
-        bot.send_message(user.user_id, text=message, parse_mode="markdown")
+        bot.send_message(user.user_id,
+                         text=message,
+                         parse_mode="markdown"
+                         )
 
         user.user_wrong_answer = ""
         user.save()
     else:
-        bot.send_message(user.user_id, text=config.TIPS_MSG)
+        bot.send_message(user.user_id,
+                         text=config.TIPS_MSG,
+                         parse_mode="markdown"
+                         )
 
 
 @bot.message_handler(content_types=["text"])
@@ -298,7 +335,9 @@ def repeat_all_messages(message):
         Если пользователь прислал просто текст.
     """
 
-    bot.send_message(message.chat.id, config.UNDERSTAND_MSG)
+    bot.send_message(message.chat.id,
+                     text=config.UNDERSTAND_MSG
+                     )
 
 
 def schedule__():
