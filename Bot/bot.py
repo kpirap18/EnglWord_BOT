@@ -5,9 +5,8 @@ import multiprocessing
 import schedule
 import time
 
-import config
-from dbinstances import User_stud, Question
-from random import randint
+from Bot import config
+from Bot.dbinstances import User_stud, Question
 
 # Подключение БД MongoDB и бота
 bot = telebot.TeleBot(config.TOKEN)
@@ -264,7 +263,7 @@ def name_ask(message):
 
         bot.send_message(message.chat.id,
                          text="👋 Привет, " + user_name +
-                         config.START_REG_MSG
+                              config.START_REG_MSG
                          )
     else:
         msg = bot.send_message(message.chat.id,
