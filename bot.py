@@ -21,10 +21,6 @@ mongoengine.connect(
 )
 
 
-def generate_r2d2():
-    return f"R{randint(0, 100)}-D{randint(0, 100)}"
-
-
 def message_send_readiness():
     """
         Отправка ВСЕМ пользователям вопрос о готовности
@@ -39,11 +35,14 @@ def message_send_readiness():
 
 
 @bot.callback_query_handler(lambda call: call.data == config.READY_BTN[1])
-def message_end(user):
+def message_end(call):
     """
         Если пользователь нажал "Я не готов",
         то ему приходит сообщение с ожиданием до завтра.
     """
+
+    bot.answer_callback_query(call.id)
+    user = User_stud.objects(user_id=call.message.chat.id).first()
 
     bot.send_message(user.user_id,
                      text=config.NOT_READY_MSG
@@ -253,14 +252,8 @@ def name_ask(message):
     if type(message.text) == str:
         user_name = message.text
 
-        login = message.chat.username
-
-        if message.chat.username is None:
-            login = f"[{generate_r2d2()}](tg://user&id={str(message.chat.id)})"
-
         stud = User_stud(
             user_id=message.chat.id,
-            user_login=login,
             user_name=user_name,
             user_status="stop",
             user_count_que=0,
