@@ -297,6 +297,9 @@ def tips_handler(message):
 
     user = User_stud.objects(user_id=message.chat.id).first()
     wrong_ans = user.user_wrong_answer.split(" ")
+    wrong_ans = wrong_ans[:len(wrong_ans) - 1]
+    wrong_ans2 = set(wrong_ans)
+    wrong_ans = list(wrong_ans2)
 
     if len(wrong_ans) - 1:
         message = " 📌 Повтори эти слова, чтобы в следующий" \
