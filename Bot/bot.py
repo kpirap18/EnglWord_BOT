@@ -140,7 +140,6 @@ def button_handler_questions(call):
             user.save()
 
     if user.user_count_que == config.PORTION_QUE:
-        user.user_status = "stop"
         user.user_count_que = 0
 
         if user.user_number_que >= config.COUNT_QUE:
@@ -148,9 +147,23 @@ def button_handler_questions(call):
         else:
             user.user_number_que += 1
 
-        bot.send_message(call.message.chat.id,
-                         text=config.END_MSG
-                         )
+        wrong_ans = user.user_wrong_answer.split(" ")
+        wrong_ans = wrong_ans[:len(wrong_ans) - 1]
+
+        if (len(wrong_ans)) > (config.PORTION_QUE / 2):
+            bot.send_message(call.message.chat.id,
+                             text=config.END2_MSG
+                             )
+            user.user_status = "tips"
+        else:
+            bot.send_message(call.message.chat.id,
+                             text=config.END1_MSG
+                             )
+
+            if len(wrong_ans) == 0:
+                user.user_status = "stop"
+            else:
+                user.user_status = "tips"
 
         user.save()
     else:
@@ -277,7 +290,7 @@ def name_ask(message):
 @bot.message_handler(commands=["questions"])
 def question_handler(message):
     """
-        Если слудент захочет ответить на вопросы просто так.
+        Если пользователь захочет ответить на вопросы просто так.
     """
 
     if User_stud.objects(user_id=message.chat.id):
@@ -286,6 +299,55 @@ def question_handler(message):
         stud.user_status = "ready"
         stud.save()
         send_single_conf(stud)
+
+
+def message_send_tips():
+    """
+        Отправка подсказок пользователям, у коготорых статус "tips".
+    """
+
+    for user in User_stud.objects():
+        if user.user_status == "tips":
+            tips_msg_only(user)
+
+
+def tips_msg_only(user):
+    """
+        После ответа на вопросы приходит сообщение о подсказках,
+        тем у кого были ошибки и стоит статус "tips".
+    """
+    wrong_ans = user.user_wrong_answer.split(" ")
+    wrong_ans = wrong_ans[:len(wrong_ans) - 1]
+    wrong_ans2 = set(wrong_ans)
+    wrong_ans = list(wrong_ans2)
+
+    if len(wrong_ans) and (user.user_status == "tips"):
+        message = " 📌 Повтори эти слова, чтобы в следующий" \
+                  " раз правильно ответить: \n"
+
+        for i in range(len(wrong_ans)):
+            question = Question.objects(number=wrong_ans[i]).first()
+
+            message += f"• *{question.text}* - {question.correct_answer} \n"
+
+        bot.send_message(user.user_id,
+                         text=message,
+                         parse_mode="markdown"
+                         )
+
+        user.user_wrong_answer = ""
+        user.user_status = "stop"
+        user.save()
+    elif user.user_status == "tips":
+        bot.send_message(user.user_id,
+                         text=config.TIPS1_MSG,
+                         parse_mode="markdown"
+                         )
+    '''else:
+        bot.send_message(user.user_id,
+                         text=config.TIPS2_MSG
+                         )
+    '''
 
 
 @bot.message_handler(commands=["tips"])
@@ -301,7 +363,7 @@ def tips_handler(message):
     wrong_ans2 = set(wrong_ans)
     wrong_ans = list(wrong_ans2)
 
-    if len(wrong_ans):
+    if len(wrong_ans) and (user.user_status == "tips"):
         message = " 📌 Повтори эти слова, чтобы в следующий" \
                   " раз правильно ответить: \n"
 
@@ -316,12 +378,18 @@ def tips_handler(message):
                          )
 
         user.user_wrong_answer = ""
+        user.user_status = "stop"
         user.save()
-    else:
+    elif user.user_status == "tips":
         bot.send_message(user.user_id,
-                         text=config.TIPS_MSG,
+                         text=config.TIPS1_MSG,
                          parse_mode="markdown"
                          )
+    '''else:
+        bot.send_message(user.user_id,
+                         text=config.TIPS2_MSG
+                         )
+    '''
 
 
 @bot.message_handler(content_types=["text"])
@@ -339,9 +407,9 @@ def schedule__():
     """
         Время отправки сообщений про готовность.
     """
-    schedule.every().day.at("13:00").do(message_send_readiness)
+    schedule.every().day.at("22:30").do(message_send_readiness)
 
-    schedule.every().day.at("20:00").do(tips_handler)
+    schedule.every().day.at("22:39").do(message_send_tips)
 
     while True:
         schedule.run_pending()
