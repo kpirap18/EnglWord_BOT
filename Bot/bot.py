@@ -301,11 +301,11 @@ def tips_handler(message):
     wrong_ans2 = set(wrong_ans)
     wrong_ans = list(wrong_ans2)
 
-    if len(wrong_ans) - 1:
+    if len(wrong_ans):
         message = " 📌 Повтори эти слова, чтобы в следующий" \
                   " раз правильно ответить: \n"
 
-        for i in range(len(wrong_ans) - 1):
+        for i in range(len(wrong_ans)):
             question = Question.objects(number=wrong_ans[i]).first()
 
             message += f"• *{question.text}* - {question.correct_answer} \n"
