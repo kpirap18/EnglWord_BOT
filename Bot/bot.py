@@ -190,9 +190,10 @@ def send_single_conf(stud):
 
     message = "Здравствуй, " + stud.user_name + "!\n" + config.START_EVERYDAY_MSG
 
-    bot.send_message(stud.user_id,
+    '''bot.send_message(stud.user_id,
                      text="🥳🇬🇧"
                      )
+    '''
     bot.send_message(stud.user_id,
                      text=message,
                      reply_markup=mark_

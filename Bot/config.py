@@ -55,11 +55,3 @@ READY_BTN = [" Я готов! ✅ ", "Я не готов! ❌"]
 BUTTON_ANS = {"1️⃣": 1, "2️⃣": 2, "3️⃣": 3, "4️⃣": 4}
 PORTION_QUE = 4
 COUNT_QUE = 15
-
-DB_NAME = "test"
-DB_USER = "ira"
-DB_PASS = "1234"
-DB_HOST = "localhost"
-DB_PART = 27017
-TOKEN = '1374290854:AAEYk6MgHcwGkOXwX_6uNgNEXdaQhsq6k1o'
-
