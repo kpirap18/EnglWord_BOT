@@ -5,18 +5,18 @@ import multiprocessing
 import schedule
 import time
 
-from Bot import config
+from Bot import config, config_init
 from Bot.dbinstances import User_stud, Question
 
 # Подключение БД MongoDB и бота
-bot = telebot.TeleBot(config.TOKEN)
+bot = telebot.TeleBot(config_init.TOKEN)
 
 mongoengine.connect(
-    db=config.DB_NAME,
-    username=config.DB_USER,
-    password=config.DB_PASS,
-    host=config.DB_HOST,
-    port=config.DB_PART
+    db=config_init.DB_NAME,
+    username=config_init.DB_USER,
+    password=config_init.DB_PASS,
+    host=config_init.DB_HOST,
+    port=config_init.DB_PART
 )
 
 
