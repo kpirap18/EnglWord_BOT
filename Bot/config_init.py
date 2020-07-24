@@ -1,4 +1,3 @@
-
 DB_NAME = "test"
 DB_USER = "ira"
 DB_PASS = "1234"
