@@ -4,4 +4,4 @@ __pycache__
 words.json
 words.js
 words.txt
-config_init.py
+Bot/config_init.py

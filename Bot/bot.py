@@ -408,9 +408,9 @@ def schedule__():
     """
         Время отправки сообщений про готовность.
     """
-    schedule.every().day.at("22:30").do(message_send_readiness)
+    schedule.every().day.at("13:00").do(message_send_readiness)
 
-    schedule.every().day.at("22:39").do(message_send_tips)
+    schedule.every().day.at("22:00").do(message_send_tips)
 
     while True:
         schedule.run_pending()
