@@ -5,18 +5,18 @@ import multiprocessing
 import schedule
 import time
 
-from Bot import config, config_init
+from Bot import config, info
 from Bot.dbinstances import User_stud, Question
 
 # Подключение БД MongoDB и бота
-bot = telebot.TeleBot(config_init.TOKEN)
+bot = telebot.TeleBot(info.TOKEN)
 
 mongoengine.connect(
-    db=config_init.DB_NAME,
-    username=config_init.DB_USER,
-    password=config_init.DB_PASS,
-    host=config_init.DB_HOST,
-    port=config_init.DB_PART
+    db=info.DB_NAME,
+    username=info.DB_USER,
+    password=info.DB_PASS,
+    host=info.DB_HOST,
+    port=info.DB_PART
 )
 
 
@@ -261,7 +261,7 @@ def name_ask(message):
     """
         Запись данных в саму базу данных.
     """
-    
+
     if type(message.text) == str:
         user_name = message.text
 
@@ -282,7 +282,7 @@ def name_ask(message):
     else:
         msg = bot.send_message(message.chat.id,
                                text="😔 Прости, я тебя не понимаю,"
-                               "попробуй еще раз"
+                                    "попробуй еще раз"
                                )
 
         bot.register_next_step_handler(msg, name_ask)
